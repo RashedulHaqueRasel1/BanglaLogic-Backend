@@ -4,6 +4,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+// const { ObjectId } = require("mongodb");
 
 
 
@@ -40,25 +41,17 @@ async function run() {
         })
 
 
-        // Push Data MongoDB
-        // app.post('/blogs', async (req, res) => {
-        //     const blogs = req.body;
-        //     blogs.cost= parseInt(blogs.cost)
-        //     // console.log(blogs)
-        //     const result = await blogsCollection.insertOne(blogs);
-        //     res.send(result)
-        // })
+
+        //  Blog Details Show .......
+        app.get('/blogs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await blogsCollection.findOne(query);
+            res.send(result);
 
 
+        });
 
-
-         // Delete Single Data ..
-        // app.delete('/blogs/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await blogsCollection.deleteOne(query);
-        //     res.send(result);
-        // })
 
 
         console.log("Pinged your deployment. Bangla Logic successfully connected to MongoDB!");
