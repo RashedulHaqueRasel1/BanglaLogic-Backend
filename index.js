@@ -4,8 +4,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// const { ObjectId } = require("mongodb");
-
+const jwt = require('jsonwebtoken');
+// const cors = require("cors");
 
 
 // middleWare....
@@ -28,15 +28,31 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+
+
+
+
 async function run() {
     try {
         const blogsCollection = client.db('BanglaLogic').collection('Blogs')
+        const usersCollection = client.db('BanglaLogic').collection('Users')
+
+
+        // Blog add in mongoDB APi
+        app.post('/addBlog', async (req, res) => {
+            const addBlog = req.body;
+            const result = await blogsCollection.insertOne(addBlog);
+            res.send(result);
+        })
+
 
 
         // Blogs Read & Show Data Clint Side .
         app.get('/blogs', async (req, res) => {
-            const cursor = blogsCollection.find();
-            const result = await cursor.toArray();
+            // sort({ _id: -1 }).
+            const result = await blogsCollection.find().toArray();
+            // const result = await cursor.toArray();
             res.send(result)
         })
 
@@ -51,6 +67,37 @@ async function run() {
 
 
         });
+
+
+
+        // Dashboard Blog Delete API
+        app.delete('/blog/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await blogsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+
+
+        // Admin Login API
+        app.post('/login', async (req, res) => {
+            const { email, password } = req.body;
+
+            // Admin Checking in MongoDB 
+            const user = await usersCollection.findOne({ email, role: 'admin' });
+            if (!user) return res.status(401).send('Unauthorized');
+
+            // Password Matching
+            if (user.password !== password) return res.status(401).send('Invalid credentials');
+
+            // JWT Token Generate
+            const token = jwt.sign({ email: user.email, role: user.role }, `${process.env.JWT_SECRET}`, { expiresIn: '1h' });
+            res.status(200).send({ token });
+        });
+
+
 
 
 
